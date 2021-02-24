@@ -18,8 +18,7 @@ Usage is as follows:
   <AdministratorPassword>
       <Value>myS3cretP@ssword</Value>
 ```
-3. If using Static IPs update the IP address, MaskBits, Gateway, and DNS information in each script file (2016/2019). 
-  Located at `scripts/<os>/set-ip.ps1`.
+3. If using Static IPs update the IP address, MaskBits, Gateway, and DNS information in each script file (2016/2019). Located at `scripts/<os>/set-ip.ps1`.
 4. If using DHCP remove the SynchronousCommand block # 15 as shown below:
 ```
 <SynchronousCommand wcm:action="add">
@@ -55,8 +54,8 @@ Then perform the following commands on the root folder:
 ## Version Specific
 | Name | Description | Type | Default | Sensitive |
 |------|-------------|------|---------|:--------:|
-| isoname-win2016 | OS Major Version of win2016. | `string` | `""` | no |
-| isoname-win2019 | OS Major Version of win2019. | `string` | `""` | no |
+| isopath-win2016 | OS Major Version of win2016. | `string` | `""` | no |
+| isopath-win2019 | OS Major Version of win2019. | `string` | `""` | no |
 
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
