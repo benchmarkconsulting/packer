@@ -9,7 +9,7 @@ This packer config is meant for use with packer 1.7.
 ## Usage
 Usage is as follows:
 1. git clone https://github.com/benchmarkconsulting/packer.git
-2. Default passwords have not been provided in the code.  There are 3 places in each autounattend.xml file (2016/2019) that need to be updated. Located at answer_files/\<\OS>/autounattend.xml file. Simply search the file for the following terms and add a password between the <Value></Value> tags.
+2. Default passwords have not been provided in the code.  There are 3 places in each autounattend.xml file (2016/2019) that need to be updated. Located at answer_files/`<OS>`/autounattend.xml file. Simply search the file for the following terms and add a password between the <Value></Value> tags.
     1. AutoLogon > Password
     2. UserAccounts > AdministratorPassword
     3. UserAccounts > LocalAccount > Password 
