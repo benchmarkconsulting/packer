@@ -9,7 +9,7 @@ This packer config is meant for use with packer 1.7.
 ## Usage
 Usage is as follows:
 1. git clone https://github.com/benchmarkconsulting/packer.git
-2. Default passwords have not been provided in the code.  There are 3 places in each autounattend.xml file (2016/2019) that need to be updated. Located at answer_files/<OS>/autounattend.xml file. Simply search the file for the following terms and add a password between the <Value></Value> tags.
+2. Default passwords have not been provided in the code.  There are 3 places in each autounattend.xml file (2016/2019) that need to be updated. Located at answer_files/\<\OS>/autounattend.xml file. Simply search the file for the following terms and add a password between the <Value></Value> tags.
     1. AutoLogon > Password
     2. UserAccounts > AdministratorPassword
     3. UserAccounts > LocalAccount > Password 
@@ -18,7 +18,8 @@ Usage is as follows:
   <AdministratorPassword>
       <Value>myS3cretP@ssword</Value>
 ```
-3. If using Static IPs update the IP address, MaskBits, Gateway, and DNS information in each script file (2016/2019). Located at scripts/<os>/set-ip.ps1.
+3. If using Static IPs update the IP address, MaskBits, Gateway, and DNS information in each script file (2016/2019). 
+  Located at scripts/<os>/set-ip.ps1.
 4. If using DHCP remove the SynchronousCommand block # 15 as shown below:
 ```
 <SynchronousCommand wcm:action="add">
