@@ -2,10 +2,6 @@ variable "vm-cpu-num" {
   type    = string
   default = "2"
 }
-variable "version" {
-  type    = string
-  default = "windowsserver2019"
-}
 variable "vm-mem-size" {
   type    = string
   default = "4096"
