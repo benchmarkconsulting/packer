@@ -5,7 +5,7 @@ source "vsphere-iso" "base-windows" {
   CPUs                 = var.vm-cpu-num
   datastore            = var.vsphere-datastore
   disk_controller_type = ["nvme"]
-  folder               = "Templates"
+  folder               = var.vsphere-folder
   insecure_connection  = true
   network_adapters {
     network      = var.vsphere-network
