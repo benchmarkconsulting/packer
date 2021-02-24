@@ -8,88 +8,26 @@ The Build handles the following components:
 This packer config is meant for use with packer 1.7. 
 ## Usage
 Usage is as follows:
-Build File:
-```hcl
-build {
-  name = "windows"
-  description = <<EOF
-//This build creates Windows images for the following versions :
-* Windows Server 2016
-* Windows Server 2019
-For the following builders :
-* vsphere-iso
-EOF
-  source "source.vsphere-iso.base-windows" {
-    name                 = "2016"
-    floppy_files         = ["${path.root}/answer_files/windowsserver2016/autounattend.xml", "./scripts/windowsserver2016/set-ip.ps1", "./scripts/disable-screensaver.ps1", "./scripts/disable-winrm.ps1", "./scripts/enable-winrm.ps1", "./scripts/unattend.xml", "./scripts/sysprep.bat", "./scripts/install-vmwaretools.ps1", "./scripts/win-updates.ps1", "./scripts/win-updates2.ps1"]
-    guest_os_type        = "windows9Server64Guest"
-    iso_paths            = ["[datastore] ISOs/windowsserver2016.iso", "[] /vmimages/tools-isoimages/windows.iso"]
-    vm_name              = "Win-2016-Template"
-  }
-  source "source.vsphere-iso.base-windows" {
-    name                 = "2019"
-    floppy_files         = ["${path.root}/answer_files/windowsserver2019/autounattend.xml", "./scripts/windowsserver2019/set-ip.ps1", "./scripts/disable-screensaver.ps1", "./scripts/disable-winrm.ps1", "./scripts/enable-winrm.ps1", "./scripts/unattend.xml", "./scripts/sysprep.bat", "./scripts/install-vmwaretools.ps1", "./scripts/win-updates.ps1", "./scripts/win-updates2.ps1"]
-    guest_os_type        = "windows9Server64Guest"
-    iso_paths            = ["[datastore] ISOs/windowsserver2019.iso", "[] /vmimages/tools-isoimages/windows.iso"]
-    vm_name              = "Win-2019-Template"
-  }
-
-  provisioner "powershell" {
-    scripts = ["scripts/Install-Nuget.ps1", "scripts/win-updates.ps1"]
-  }
-  provisioner "windows-restart" {
-    restart_timeout = "1h5m"
-  }
-  provisioner "powershell" {
-    scripts = ["scripts/win-updates.ps1"]
-  }
-  provisioner "windows-restart" {
-    restart_timeout = "1h5m"
-  }
-  provisioner "powershell" {
-    scripts = ["scripts/win-updates.ps1"]
-  }
-  provisioner "windows-restart" {
-    restart_timeout = "1h5m"
-  }
-  provisioner "powershell" {
-    scripts = ["scripts/start_sleep.ps1", "scripts/win_hardening.ps1", "scripts/Remove-UpdateCache.ps1", "scripts/Reset-EmptySpace.ps1"]
-  }
-  provisioner "windows-restart" {
-    restart_timeout = "1h5m"
-  }
-}
+1. git clone https://github.com/benchmarkconsulting/packer.git
+2. Default passwords have not been provided in the code.  There are 3 places in each autounattend.xml file (2016/2019) that need to be updated. Located at answer_files/<OS>/autounattend.xml file. Simply search the file for the following terms and add a password between the <Value></Value> tags.
+    1. AutoLogon > Password
+    2. UserAccounts > AdministratorPassword
+    3. UserAccounts > LocalAccount > Password 
 ```
-Source File:
-```hcl
-source "vsphere-iso" "base-windows" {
-  cluster              = var.vsphere-cluster
-  communicator         = "winrm"
-  convert_to_template  = false
-  CPUs                 = var.vm-cpu-num
-  datastore            = var.vsphere-datastore
-  disk_controller_type = ["nvme"]
-  folder               = "Templates"
-  insecure_connection  = true
-  network_adapters {
-    network      = var.vsphere-network
-    network_card = "vmxnet3"
-  }
-  notes           = "Build via Packer"
-  password        = var.vsphere-password
-  RAM             = var.vm-mem-size
-  RAM_reserve_all = false
-  remove_cdrom    = false
-  storage {
-    disk_size             = var.vm-disk-size
-    disk_thin_provisioned = true
-  }
-  username       = var.vsphere-user
-  vcenter_server = var.vsphere-server
-  winrm_password = var.winrm-password
-  winrm_username = var.winrm-user
-}
+<UserAccounts>
+  <AdministratorPassword>
+      <Value>myS3cretP@ssword</Value>
 ```
+3. If using Static IPs update the IP address, MaskBits, Gateway, and DNS information in each script file (2016/2019). Located at scripts/<os>/set-ip.ps1.
+4. If using DHCP remove the SynchronousCommand block # 15 as shown below:
+```
+<SynchronousCommand wcm:action="add">
+    <CommandLine>C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\set-ip.ps1</CommandLine>
+    <Order>15</Order>
+    <Description>set ip</Description>
+</SynchronousCommand>
+```
+5. Update the dev.auto.pkrvars.hcl to match your environment.
 
 <!-- Command Section -->
 Then perform the following commands on the root folder:
