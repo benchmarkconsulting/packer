@@ -105,7 +105,7 @@ git clone https://github.com/benchmarkconsulting/packer.git
 ```
 2. Change Directory
 ```
-cd univeris/packer/vmware/x-hcl (replace 'x' with the OS that you are looking to build)
+cd packer/vmware/x-hcl (replace 'x' with the OS that you are looking to build)
 ```
 
 3. Add required secrets to the secret.auto.pkrvars.hcl file
