@@ -1,0 +1,35 @@
+pipeline {
+  agent {
+    kubernetes {
+      yaml: """
+kind: Pod
+spec:
+  containers:
+  - name: jnlp
+    image: packer-slave
+    imagePullPolicy: Always
+    tty: false
+"""
+    }
+  }
+  stages {
+    stage('download packer config') {
+      steps {
+        git(url: 'https://github.com/benchmarkconsulting/packer.git', branch: 'main')
+      }
+    }
+
+    stage('packer validate') {
+      steps {
+        sh 'packer validate'
+      }
+    }
+
+    stage('packer build') {
+      steps {
+        sh 'packer build .'
+      }
+    }
+
+  }
+}

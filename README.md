@@ -1,93 +1,226 @@
-# Packer build for Windows based Images on VMware
-This Build handles the creation and configuration of Windows 2019 & 2016 based images in VMware.
-The Build handles the following components: 
-- Creation of VMWare Template
-- Hardening Based on CIS Framework
+<!-- ABOUT THE PROJECT -->
+## About The Project
+This is an Image Creation as Code Project for Windows and RHEL images leveraging HashiCorp's Packer. Packer is an open source tool for creating identical machine images for multiple platforms from a single source configuration. Packer is lightweight, runs on every major operating system, and is highly performant, creating machine images for multiple platforms in parallel. Packer allows us to start with an ISO and end up with a hardened and patched VMWare template that can be provisioned with HashiCorp's Terraform.
 
-## Compatibility
-This packer config is meant for use with packer 1.7. 
-## Usage
-Usage is as follows:
-1. git clone https://github.com/benchmarkconsulting/packer.git
-2. Default passwords have not been provided in the code.  There are 3 places in each autounattend.xml file (2016/2019) that need to be updated. Located at `answer_files/<OS>/autounattend.xml` file. Simply search the file for the following terms and add a password between the <Value></Value> tags.
-    1. AutoLogon > Password
-    2. UserAccounts > AdministratorPassword
-    3. UserAccounts > LocalAccount > Password 
+Packer Benefits:
+* Automated approach to image creation
+* Images are continually secured: hardened at patched during creation
+* Consistent method for creating consumable images
+* Your time should be focused on creating something amazing. A project that solves a problem and helps others :smile:
+
+You can suggest changes by forking this repo and creating a pull request or opening an issue.
+
+A list of commonly used resources that we find helpful are listed in the Resources.
+
+### Packer Builder from VMWare vSphere
+
+At Univeris, Packer leverages the vSphere API to create VMware templates via code. These deployable VMWare templates start with a vendor approved ISO.  Packer then applies the desired configuration through supplied answer files. This result is a hardened, patched VMware template (golden image) that can be used to build server environments with Terraform.
+
+# Packer Inputs
+
 ```
-<UserAccounts>
-  <AdministratorPassword>
-      <Value>myS3cretP@ssword</Value>
+ISO RHEL/Windows
 ```
-3. If using Static IPs update the IP address, MaskBits, Gateway, and DNS information in each script file (2016/2019). Located at `scripts/<os>/set-ip.ps1`.
-4. If using DHCP remove the SynchronousCommand block # 15 as shown below:
+- Downloaded from vendor  
+- Uploaded and stored in corresponding folder in vSphere.
 ```
-<SynchronousCommand wcm:action="add">
-    <CommandLine>C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\set-ip.ps1</CommandLine>
-    <Order>15</Order>
-    <Description>set ip</Description>
-</SynchronousCommand>
+Packer build HCL files
 ```
-5. Update the dev.auto.pkrvars.hcl to match your environment.
+- Stored in Git
 
-<!-- Command Section -->
-Then perform the following commands on the root folder:
-- `packer validate .` to lint the template
-- `packer build .` to start the template creation
+build.vmware-iso.pkr.hcl  
+source.vmware-iso.pkr.hcl  
+variables.common.pkr.hcl  
+variables.x.pkr.hcl  (where 'x' is specific to the version of the OS that you are building)  
+secret.auto.pkrvars.hcl  
 
-<!-- BEGINNING OF Packer DOCS -->
-## Common Inputs
-| Name | Description | Type | Default | Sensitive |
-|------|-------------|------|---------|:--------:|
-| vm-cpu-num | Number of VCPU used to build the template.| `string` | `2` | no |
-| vm-mem-size | The Amount of Memory to builf the template. | `string` | `4096` | no |
-| vm-disk-size | The Default Disk size when building the template. | `string` | `32768` | no |
-| vsphere-server |  The DNS or IP address of the VSphere Server. | `string` | `x.x.x.x` | no |
-| vsphere-user | The user name to use to authenticate against the vCenter Server. | `string` | `""` | yes |
-| vsphere-cluster | The VSphere Cluster to Launch the template on. | `string` | `""` | no |
-| vsphere-folder | The Folder in VCenter to store the template in. | `string` | `Templates` | no |
-| vsphere-network | The VLAN Network to launch the VM on to create the template. | `string` | `""` | no |
-| vsphere-password | The Password for authenticating against VSphere. | `string` | `""` | yes |
-| winrm-user | The WINRM user that is used to connect to the VM to run autounattend features. | `string` | `""`| yes |
-| winrm-password | The WINRM password that is used to connect to the VM to run autounattend features. | `string` | `""` | yes |
-| vsphere-datastore | The DataStore to store the VMware Template on. | `string` | `""` | no |
+```
+Answer files
 
-## Version Specific
-| Name | Description | Type | Default | Sensitive |
-|------|-------------|------|---------|:--------:|
-| isopath-win2016 | OS Major Version of win2016. | `string` | `""` | no |
-| isopath-win2019 | OS Major Version of win2019. | `string` | `""` | no |
+```
+- Stored in Git
+
+RHEL - Kickstart File  
+Windows - Autounattend.xml File
+
+### The Process
+
+#### Download ISOs from Vendor
+
+Download RHEL ISO from Red Hat or Windows ISO from Microsoft.
+
+#### Upload ISOs to vSphere
+
+Sign into the vSphere client 
+
+Choose the **isos** folder.  
+Choose the corresponding sub-folder for the type of ISO that you are uploading:
+
+* Windows
+* RHEL
+
+Click **Upload Files**
+Select the ISO you wish to upload
+
+#### When updating ISOs
+
+When you acquire a new ISO from a vendor, the variable in the corresponding variables file would need to be updated. For example, if Red Hat released an updated ISO to replace RHEL 8.3 with RHEL 8.4, you would update the **variables.rhel8.pkr.hcl** file with the updated ISO name and commit the change. For example, replace **rhel-8.3-x86_64-dvd.iso** with **rhel-8.4-x86_64-dvd.iso**
+
+#### Building the Images
+
+Start a Packer Build manually, or merge a change to one of the Packer Build HCLs Files. Packer initiates a VM on the host and starts the build process.
+
+The Answer files contain answers to all questions normally asked during the OS installation. These files helps to automate the installation process, without need for any intervention from the user.  This includes hardening requirements to meet CIS Standards. When the build is complete, it is marked as a template in vSphere. This template is the considered to be the gold image.
+
+<!-- GETTING STARTED -->
+## Getting Started
 
 
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
-## Requirements
-Before this module can be used on a project, you must ensure that the following pre-requisites are fulfilled:
-1. Packer is [installed](#software-dependencies) on the machine where Packer is executed.
-2. The Service Account you execute the build with has the right [permissions](#VCenter-Service-Account-Requirements).
-### Software Dependencies
-#### Packer
-- [Packer](https://www.packer.io/downloads) 1.7.0
-### VCenter Service Account Requirements 
-In order to execute this build you must have a Service Account with the
-following VCenter permissions:
-#### VM folder (this object and children):
-- Virtual machine -> Inventory
-- Virtual machine -> Configuration
-- Virtual machine -> Interaction
-- Virtual machine -> Snapshot management
-- Virtual machine -> Provisioning
-#### Resource pool, host, or cluster (this object):
-- Resource -> Assign virtual machine to resource pool
-#### Host in clusters without DRS (this object):
-- Read-only
-#### Datastore (this object):
-- Datastore -> Allocate space
-- Datastore -> Browse datastore
-- Datastore -> Low level file operations
-#### Network (this object):
-- Network -> Assign network
-#### Distributed switch (this object):
-- Read-only
-#### Datacenter (this object):
-- Datastore -> Low level file operations
-#### Host (this object):
-Host -> Configuration -> System Management
+
+### Prerequisites
+
+Use yum-config-manager to add the official HashiCorp Linux repository.
+
+* Packer
+```
+sudo yum install -y yum-utils
+```
+```
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+```
+```
+sudo yum -y install packer
+```
+
+* mkisofs (to support CD ISO Creation)
+```
+sudo yum -y install mkisofs
+```
+
+### Usage
+
+1. Clone the repo
+```
+git clone https://github.com/benchmarkconsulting/packer.git
+```
+2. Change Directory
+```
+cd univeris/packer/vmware/x-hcl (replace 'x' with the OS that you are looking to build)
+```
+
+3. Add required secrets to the secret.auto.pkrvars.hcl file
+```
+vsphere-user = ""
+vsphere-password = ""
+ssh-username = "" (from the OS specific kickstart file)
+ssh-password = "" (from the OS specific kickstart file)
+```
+
+4. Validate your changes
+```
+packer validate .
+```
+
+5. Build all images
+```
+packer build -force .
+```
+
+6. Build a specific image
+```
+packer build -force -only '*.x' .
+
+(The -only switch enables you to isolate a specific source to build from.  Replace 'x' with the name of the source from the build file)
+```
+
+7. Example Output:
+```
+==> rhel.vsphere-iso.7: Creating CD disk...
+    rhel.vsphere-iso.7: Warning: creating filesystem with Joliet extensions but without Rock Ridge
+    rhel.vsphere-iso.7: extensions. It is highly recommended to add Rock Ridge.
+    rhel.vsphere-iso.7: I: -input-charset not specified, using utf-8 (detected in locale settings)
+    rhel.vsphere-iso.7: Total translation table size: 0
+    rhel.vsphere-iso.7: Total rockridge attributes bytes: 0
+    rhel.vsphere-iso.7: Total directory bytes: 0
+    rhel.vsphere-iso.7: Path table size(bytes): 10
+    rhel.vsphere-iso.7: Max brk space used 0
+    rhel.vsphere-iso.7: 184 extents written (0 MB)
+    rhel.vsphere-iso.7: Done copying paths from CD_dirs
+==> rhel.vsphere-iso.7: Uploading packer545505393.iso to packer_cache/packer545505393.iso
+==> rhel.vsphere-iso.7: the vm/template Univeris VMs/Templates/RHEL7-Template-HCL already exists, but deleting it due to -force flag
+==> rhel.vsphere-iso.7: Creating VM...
+==> rhel.vsphere-iso.7: Customizing hardware...
+==> rhel.vsphere-iso.7: Mounting ISO images...
+==> rhel.vsphere-iso.7: Adding configuration parameters...
+==> rhel.vsphere-iso.7: Set boot order temporary...
+==> rhel.vsphere-iso.7: Power on VM...
+==> rhel.vsphere-iso.7: Waiting 10s for boot...
+==> rhel.vsphere-iso.7: Typing boot command...
+==> rhel.vsphere-iso.7: Waiting for IP...
+==> rhel.vsphere-iso.7: IP address: *.*.*.80
+==> rhel.vsphere-iso.7: Using ssh communicator to connect: 10.10.116.80
+==> rhel.vsphere-iso.7: Waiting for SSH to become available...
+==> rhel.vsphere-iso.7: Connected to SSH!
+==> rhel.vsphere-iso.7: Shutting down VM...
+==> rhel.vsphere-iso.7: Deleting Floppy drives...
+==> rhel.vsphere-iso.7: Eject CD-ROM drives...
+==> rhel.vsphere-iso.7: Convert VM into template...
+==> rhel.vsphere-iso.7: Clear boot order...
+Build 'rhel.vsphere-iso.7' finished after 12 minutes 58 seconds.
+```
+
+<!-- Repo Strcuture -->
+## Repo Structure
+```
+vmware/                   # Cloud                      
+   windows/               # Operating System
+   rhel/
+   templates.pkr.hcl      # Packer Templates
+   variables.pkrvars.hcl  # here we assign variables to particular systems
+
+   answer_files/          # OS Specific answerfile requirements
+        ks.cfg            # Kickstart File
+        autounattend.xml  # Autounattend.xml
+   scripts/
+      sysprep.bat         # sysprep for Windows 
+```
+
+_For more examples, please refer to the [Documentation](https://www.packer.io/docs)_
+
+
+<!-- Tips and Tricks -->
+## Tips and Tricks
+
+See [Best Practices](https://www.packer.io/docs/templates) for a list of Best Pracices and Tips and Tricks.
+
+
+<!-- CONTRIBUTING -->
+## Contributing
+
+Contributions are what make an open source community and such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+
+<!-- LICENSE -->
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+
+<!-- CONTACT -->
+## Contact
+
+Matt Cole - matt.cole@benchmarkcorp.com  
+Jeremy Carson - jeremy.carson@benchmarkcorp.com  
+Jon Sammut - jon.sammut@benchmarkcorp.com  
+David Patrick - dave.patrick@benchmarkcorp.com  
+
+<!-- Resource LINKS  -->
+## Resources
+
+[https://packer.io](https://www.packer.io/)
